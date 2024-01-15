@@ -4,7 +4,7 @@ Vichaar is a Social Media app that allows users to connect and explore the world
 
 
 # screenshots
-![Simulator Screenshot - iPhone 15 Pro Max - 2024-01-15 at 18 09 37](https://github.com/ravneet1805/Vichaar--Frontend/assets/97474782/50422ad2-1c95-412a-9cc1-6fbeac523196 =250x)
+![Simulator Screenshot - iPhone 15 Pro Max - 2024-01-15 at 18 09 37 =250x](https://github.com/ravneet1805/Vichaar--Frontend/assets/97474782/50422ad2-1c95-412a-9cc1-6fbeac523196)
 ![Simulator Screenshot - iPhone 15 Pro Max - 2024-01-02 at 17 29 58](https://github.com/ravneet1805/Vichaar--Frontend/assets/97474782/00570fc0-3e9b-40ff-91dc-4a48e62754fc =250x)
 ![Simulator Screenshot - iPhone 15 Pro Max - 2024-01-15 at 18 09 05](https://github.com/ravneet1805/Vichaar--Frontend/assets/97474782/f318e958-d167-4b86-8d58-0e76548165a4 =250x)
 ![Simulator Screenshot - iPhone 15 Pro Max - 2024-01-15 at 18 15 53](https://github.com/ravneet1805/Vichaar--Frontend/assets/97474782/79ba826b-52c3-4688-aece-0d0f8f6f3a2e =250x)
