@@ -94,7 +94,7 @@ class _UserNoteListState extends State<UserNoteList> {
                                       title: Text('Edit', style: TextStyle(color: Colors.white),),
                                       onTap: () {
                                         Navigator.pop(context);
-                                        // TODO: Implement edit functionality
+                                        _showEditDialog(userNote!);
                                       },
                                     ),
                                     ListTile(
@@ -123,7 +123,7 @@ class _UserNoteListState extends State<UserNoteList> {
                                                   onPressed: () async{
                                                     Navigator.pop(context);
 
-                                                   bool check = await  apiService.deleteNote(
+                                                    bool check = await  apiService.deleteNote(
                                                         userNote?.noteId ?? '',
                                                       );
                                                       print(check);
@@ -189,4 +189,58 @@ class _UserNoteListState extends State<UserNoteList> {
       },
     );
   }
+  void _showEditDialog(UserNote userNote) {
+  TextEditingController _titleController = TextEditingController();
+  _titleController.text = userNote.title;
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: kGreyColor,
+        title: Text('Edit Post', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: _titleController,
+          style: TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            labelText: 'New Text',
+            
+            labelStyle: TextStyle(color: Colors.white),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('Cancel', style: TextStyle(color: Colors.white)),
+          ),
+          TextButton(
+            onPressed: () async {
+              String newTitle = _titleController.text;
+              // Call your API service to update the note
+              bool success = await apiService.updateNote(
+                userNote.noteId,
+                newTitle,
+              );
+              if (success) {
+                // Optionally, you can show a success message
+                Navigator.pop(context); 
+                
+                setState(() {
+                  notes = apiService.getUserNotes();
+                });
+              } else {
+                // Handle error
+                // Optionally, you can show an error message
+              }
+            },
+            child: Text('Save', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 }

@@ -21,6 +21,7 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
+  bool show = false;
   void EmptyField(String email, String password, BuildContext context) {
     if (email.isEmpty || password.isEmpty) {
       showTopSnackBar(
@@ -43,6 +44,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Future<void> registerUser(
     String name, String email, String password, XFile? photo, BuildContext context) async {
+      print(name+password+email);
   try {
     showDialog(
       context: context,
@@ -54,7 +56,7 @@ class _SignupScreenState extends State<SignupScreen> {
     );
 
     const url =
-        'http://localhost:4000/users/signup'; // Replace with your actual API endpoint
+        'https://vichaar.onrender.com/users/signup'; // Replace with your actual API endpoint
 
     final request = http.MultipartRequest('POST', Uri.parse(url));
 
@@ -272,7 +274,13 @@ class _SignupScreenState extends State<SignupScreen> {
                     hintText: 'Password',
                     fillColor: Color(0xffF8F9FA),
                     filled: true,
-                    suffixIcon: Icon(Icons.visibility_off),
+                    suffixIcon: GestureDetector(
+                      onTap: (){
+                        setState(() {
+                          show = !show;
+                        });
+                      },
+                      child: Icon(Icons.visibility_off)),
                     prefixIcon: Icon(
                       Icons.lock,
                       color: Color(0xff323F4B),
@@ -294,7 +302,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 SizedBox(height: 60),
                 GestureDetector(
                   onTap: () {
-                    print("name: $name   email: $email   password: $password" );
+                    print("name: $name.text   email: $email.text   password: $password.text" );
                     EmptyField(email, password, context);
                     registerUser(name, email, password, _imageFile, context);
                   },

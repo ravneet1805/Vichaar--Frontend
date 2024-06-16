@@ -38,14 +38,17 @@ class AddScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(
-              'Share Your Vichaar',
-              style: TextStyle(
-                color: Colors.white,
-                // fontSize: 30,
-                // fontWeight: FontWeight.bold,
+        title: Padding(
+          padding: const EdgeInsets.only(top: 30.0),
+          child: Text(
+                'Share Your Vichaar',
+                style: TextStyle(
+                  color: Colors.white,
+                  // fontSize: 30,
+                  // fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
+        ),
             centerTitle: false,
         backgroundColor: Colors.black,
         automaticallyImplyLeading: false,
@@ -60,7 +63,7 @@ class AddScreen extends StatelessWidget {
               'Let your thoughts take shape.',
               style: TextStyle(
                 color: Colors.white70,
-                fontSize: 16,
+                fontSize: 14,
                 //fontWeight: FontWeight.bold,
               ),
             ),
@@ -92,6 +95,7 @@ class AddScreen extends StatelessWidget {
               onPressed: () {
                 // Call the function to save the note
                 saveNote(context);
+                FocusScope.of(context).unfocus();
               },
               style: ButtonStyle(
                 backgroundColor:MaterialStatePropertyAll(Colors.white) ,

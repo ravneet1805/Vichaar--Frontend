@@ -13,12 +13,26 @@ import '../View/home.dart';
 
 
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  bool show = true;
   Future<void> loginUser(String email, String password, BuildContext context) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Center(
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
     const url =
-        'http://localhost:4000/users/signin'; // Replace with your actual API endpoint
+        'https://vichaar.onrender.com/users/signin'; // Replace with your actual API endpoint
 
     final response = await http.post(
       Uri.parse(url),
@@ -29,9 +43,11 @@ class LoginScreen extends StatelessWidget {
       }),
     );
 
+
     if (response.statusCode == 201) {
       // Successful login, handle the response accordingly
       final responseData = json.decode(response.body);
+      Navigator.pop(context);
 
       showTopSnackBar(
     Overlay.of(context),
@@ -50,7 +66,7 @@ class LoginScreen extends StatelessWidget {
     print('this is name from storage:'+prefs.getString('name').toString());
       Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) =>
     MyNavbar()), (Route<dynamic> route) => false);
-
+      
       print(responseData);
     } else {
       // Handle errors, you can show an error message to the user
@@ -152,11 +168,19 @@ class LoginScreen extends StatelessWidget {
                   onChanged: (value) {
                     password = value;
                   },
+                  obscureText: show,
                   decoration: InputDecoration(
                     hintText: 'Password',
-                    fillColor: Color(0xffF8F9FA),
+                    fillColor: Color.fromRGBO(248, 249, 250, 1),
                     filled: true,
-                    suffixIcon: Icon(Icons.visibility_off),
+                    
+                    suffixIcon: GestureDetector(
+                      onTap: (){
+                        setState(() {
+                          show = !show;
+                        });
+                      },
+                      child:show?  Icon( Icons.visibility_off ): Icon(Icons.visibility),),
                     prefixIcon: Icon(
                       Icons.lock,
                       color: Colors.black,

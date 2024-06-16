@@ -118,6 +118,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   builder: (context) => ProfileScreen(
                         loggedUser: false,
                         id: _searchResults[index].userId,
+                        image: _searchResults[index].image,
                       )));
             },
             title: Text(

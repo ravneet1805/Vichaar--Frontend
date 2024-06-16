@@ -14,8 +14,8 @@ import '../Model/userNoteModel.dart';
 
 class ApiService {
   static const String baseUrl = 
-  //'https://vichaar.onrender.com'
-  'http://localhost:4000'
+  'https://vichaar.onrender.com'
+  //'http://localhost:4000'
   ;
    String? token;
 
@@ -128,6 +128,39 @@ class ApiService {
       return false;
     }
   }
+
+
+  Future<bool> updateNote(String noteId, String newTitle) async {
+    token = await getToken();
+
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/notes/$noteId'),
+        headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'bearer $token'
+    },
+        body: jsonEncode({
+      'title': newTitle,
+    }),
+      );
+
+      if (response.statusCode == 200) {
+        // Update was successful
+        print('Note Updated Successfully!');
+        return true;
+      } else {
+        // Update failed
+        print('Failed to update note: ${response.statusCode}');
+        return false;
+      }
+    } catch (e) {
+      // Exception occurred during the update
+      print('Error updating note: $e');
+      return false;
+    }
+  }
+
 
   Future<List<User>> searchUsers(String query) async {
     final String apiUrl = '$baseUrl/users/search/$query';

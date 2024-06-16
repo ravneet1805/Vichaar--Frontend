@@ -13,7 +13,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Sample data for ListView.builder
+
   final ApiService apiService = ApiService();
 
   late Future<List<Note>> notes;
@@ -61,15 +61,15 @@ class _HomeScreenState extends State<HomeScreen> {
               // Handle notifications button press
             },
           ),
-          IconButton(
-            icon: Icon(Icons.notifications),
-            onPressed: () {
-              // Handle notifications button press
-            },
-          ),
+          // IconButton(
+          //   icon: Icon(Icons.notifications),
+          //   onPressed: () {
+          //     // Handle notifications button press
+          //   },
+          // ),
         ],
       ),
-      //extendBodyBehindAppBar: true,
+      
       body: Container(
         decoration: BoxDecoration(
           gradient: kBgGradient
