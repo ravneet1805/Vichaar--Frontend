@@ -1,4 +1,5 @@
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -103,7 +104,7 @@ class _ChatScreenState extends State<ChatScreen> {
       stream: chatService.getMessages(currentUserId, otherUserId),
       builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return Center(child: CupertinoActivityIndicator(color: Colors.white,));
         }
 
         if (snapshot.hasError) {

@@ -22,6 +22,8 @@ class _ExplorePageState extends State<ExplorePage> {
   List<User> _searchResults = [];
   bool _isLoading = false;
   bool isSelected = false;
+  String? selectedSkill;
+  Future<List<Note>>? skillNotes;
 
   Timer? _debounce;
 
@@ -55,6 +57,12 @@ class _ExplorePageState extends State<ExplorePage> {
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _fetchNotesForSkill(String skill) async {
+    setState(() {
+      skillNotes = apiService.fetchNotesForSkill(skill);
+    });
   }
 
   @override
@@ -160,7 +168,7 @@ class _ExplorePageState extends State<ExplorePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Top Skills', style: TextStyle(color: Colors.white, fontSize: 18)),
+            Text('Top Skills', style: TextStyle(color: kGreyHeadTextcolor, fontSize: 18)),
             SizedBox(height: 10),
             FutureBuilder<List<dynamic>>(
               future: trendingSkills,
@@ -179,25 +187,34 @@ class _ExplorePageState extends State<ExplorePage> {
                       scrollDirection: Axis.horizontal,
                       itemCount: snapshot.data!.length,
                       itemBuilder: (context, index) {
+                        String skill = snapshot.data![index]['skill'];
+                        bool isSelected = selectedSkill == skill;
                         return Padding(
                           padding: const EdgeInsets.only(right: 8.0),
                           child: ChoiceChip(
-                            label: Text(snapshot.data![index]['skill'],
-                            //style: TextStyle(color: Colors.black),
+                            label: Text(
+                              skill,
                             ),
-
-                                 selected: isSelected,
-              // onSelected: ,
+                            selected: isSelected,
+                            onSelected: (bool selected) {
+                              setState(() {
+                                selectedSkill = selected ? skill : null;
+                                if (selectedSkill != null) {
+                                  _fetchNotesForSkill(selectedSkill!);
+                                }
+                              });
+                            },
                             selectedColor: kPurpleColor,
-                            disabledColor: Colors.black,
-
-              showCheckmark: false,
-              shape: StadiumBorder(
-                side: BorderSide(color: isSelected? kPurpleColor : Colors.white30),
-              ),
-              labelStyle: TextStyle(
-                color:  Colors.white,
-              ),
+                            backgroundColor: kGreyColor,
+                            showCheckmark: false,
+                            shape: StadiumBorder(
+                              side: BorderSide(
+                                  color:
+                                      isSelected ? kPurpleColor : Colors.white30),
+                            ),
+                            labelStyle: TextStyle(
+                              color: Colors.white,
+                            ),
                           ),
                         );
                       },
@@ -207,54 +224,108 @@ class _ExplorePageState extends State<ExplorePage> {
               },
             ),
             SizedBox(height: 20),
-            Text('Trending Vichaar', style: TextStyle(color: Colors.white, fontSize: 18)),
-            SizedBox(height: 10),
-            FutureBuilder<List<Note>>(
-              future: trendingNotes,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      ShimmerTile(),
-                      ShimmerTile(),
-                      ShimmerTile(),
-                      ShimmerTile(),
-                      ShimmerTile(),
-                    ],
-                  );
-                } else if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}',
-                      style: TextStyle(color: Colors.red));
-                } else {
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: snapshot.data!.length,
-                    itemBuilder: (context, index) {
-                      Note note = snapshot.data![index];
-                      print(note.name);
-                      return NoteTile(
-                        title: note.title,
-                        name: note.name,
-                        userName: note.userName,
-                        time: note.formatTime(),
-                        noteId: note.noteId,
-                        likes: note.likes,
-                        userID: note.userId,
-                        postImage: note.postImage ?? '',
-                        comments: note.comments,
-                        image: note.image,
-                        index: index,
-                      );
-                    },
-                  );
-                }
-              },
-            ),
+            selectedSkill == null ? _buildTrendingNotes() : _buildSkillNotes(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTrendingNotes() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(height: 10),
+        Text('Trending Vichaar', style: TextStyle(color: kGreyHeadTextcolor, fontSize: 18)),
+        SizedBox(height: 10),
+        FutureBuilder<List<Note>>(
+          future: trendingNotes,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  ShimmerTile(),
+                  ShimmerTile(),
+                  ShimmerTile(),
+                  ShimmerTile(),
+                  ShimmerTile(),
+                ],
+              );
+            } else if (snapshot.hasError) {
+              return Text('Error: ${snapshot.error}', style: TextStyle(color: Colors.red));
+            } else {
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                itemCount: snapshot.data!.length,
+                itemBuilder: (context, index) {
+                  Note note = snapshot.data![index];
+                  print(note.name);
+                  return NoteTile(
+                    title: note.title,
+                    name: note.name,
+                    userName: note.userName,
+                    time: note.formatTime(),
+                    noteId: note.noteId,
+                    likes: note.likes,
+                    userID: note.userId,
+                    postImage: note.postImage ?? '',
+                    comments: note.comments,
+                    image: note.image,
+                    index: index,
+                  );
+                },
+              );
+            }
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSkillNotes() {
+    return FutureBuilder<List<Note>>(
+      future: skillNotes,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              ShimmerTile(),
+              ShimmerTile(),
+              ShimmerTile(),
+              ShimmerTile(),
+              ShimmerTile(),
+            ],
+          );
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}', style: TextStyle(color: Colors.red));
+        } else {
+          return ListView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemCount: snapshot.data!.length,
+            itemBuilder: (context, index) {
+              Note note = snapshot.data![index];
+              print(note.name);
+              return NoteTile(
+                title: note.title,
+                name: note.name,
+                userName: note.userName,
+                time: note.formatTime(),
+                noteId: note.noteId,
+                likes: note.likes,
+                userID: note.userId,
+                postImage: note.postImage ?? '',
+                comments: note.comments,
+                image: note.image,
+                index: index,
+              );
+            },
+          );
+        }
+      },
     );
   }
 }

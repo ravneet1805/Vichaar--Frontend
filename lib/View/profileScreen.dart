@@ -11,6 +11,7 @@ import 'package:vichaar/Services/otherServices.dart';
 import 'package:vichaar/View/followListScreen.dart';
 import 'package:vichaar/constant.dart';
 import '../AuthPages/login.dart';
+import '../Components/fullScreenImage.dart';
 import '../Model/userNoteModel.dart';
 import 'OnBoard/onBoardHome.dart';
 import 'chatScreen.dart';
@@ -453,56 +454,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
   //      ------------ W I D G E T S ----------
 
   Widget Avatar() {
-    return CircleAvatar(
-      backgroundColor: kGreyColor,
-      radius: 35,
-      child: widget.image != '' || widget.loggedUser
-          ? ClipOval(
-              child: Image.network(
-              widget.loggedUser ? image : widget.image,
-              loadingBuilder: (BuildContext context, Widget child,
-                  ImageChunkEvent? loadingProgress) {
-                if (loadingProgress == null) {
-                  return child; // Image is loaded successfully
-                } else if (loadingProgress.cumulativeBytesLoaded ==
-                    loadingProgress.expectedTotalBytes) {
-                  return child; // Image is fully loaded (even if it's an error image)
-                } else {
-                  return Center(
-                      //child: CircularProgressIndicator(),
-                      );
-                }
-              },
-              errorBuilder:
-                  (BuildContext context, Object error, StackTrace? stackTrace) {
-                // Error loading the image, display a placeholder or fallback image
-                return Image.asset(
-                    'assets/icons/default_profile.png'); // Replace with your placeholder image
-              },
-              height: 80,
-              width: 80,
-              fit: BoxFit.cover,
-            ))
-          : FutureBuilder<String>(
-              future: fullName,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  loading = true;
-                  return Container();
-                } else if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                } else {
-                  loading = false;
-                  return Text(
-                    snapshot.data!.substring(0, 1).toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 24,
-                      color: Colors.black,
-                    ),
-                  );
-                }
-              },
-            ),
+    return GestureDetector(
+      onTap: (){
+        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) =>
+                                FullImageScreen(imageUrl: widget.loggedUser ? image : widget.image,),
+                          ));
+      },
+      child: CircleAvatar(
+        backgroundColor: kGreyColor,
+        radius: 35,
+        child: widget.image != '' || widget.loggedUser
+            ? ClipOval(
+                child: Image.network(
+                widget.loggedUser ? image : widget.image,
+                loadingBuilder: (BuildContext context, Widget child,
+                    ImageChunkEvent? loadingProgress) {
+                  if (loadingProgress == null) {
+                    return child; // Image is loaded successfully
+                  } else if (loadingProgress.cumulativeBytesLoaded ==
+                      loadingProgress.expectedTotalBytes) {
+                    return child; // Image is fully loaded (even if it's an error image)
+                  } else {
+                    return Center(
+                        //child: CircularProgressIndicator(),
+                        );
+                  }
+                },
+                errorBuilder:
+                    (BuildContext context, Object error, StackTrace? stackTrace) {
+                  // Error loading the image, display a placeholder or fallback image
+                  return Image.asset(
+                      'assets/icons/default_profile.png'); // Replace with your placeholder image
+                },
+                height: 80,
+                width: 80,
+                fit: BoxFit.cover,
+              ))
+            : FutureBuilder<String>(
+                future: fullName,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    loading = true;
+                    return Container();
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else {
+                    loading = false;
+                    return Text(
+                      snapshot.data!.substring(0, 1).toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 24,
+                        color: Colors.black,
+                      ),
+                    );
+                  }
+                },
+              ),
+      ),
     );
   }
 

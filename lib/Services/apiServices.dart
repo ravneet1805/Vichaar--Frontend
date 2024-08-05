@@ -246,10 +246,12 @@ Future<List<Note>> fetchTrendingNotes() async {
   }
 }
 
-Future<List<dynamic>> fetchNotesForSpecificSkill(String skill) async {
+Future<List<Note>> fetchNotesForSkill(String skill) async {
   final response = await http.get(Uri.parse('$baseUrl/notes/skill/$skill'));
   if (response.statusCode == 200) {
-    return jsonDecode(response.body);
+    final List<dynamic> data = json.decode(response.body);
+      print("user token sent to backend: $data");
+      return data.map((note) => Note.fromJson(note)).toList();
   } else {
     throw Exception('Failed to load notes for skill');
   }
