@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "521627758022",
+    "project_id": "vichaar-31878",
+    "storage_bucket": "vichaar-31878.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:521627758022:android:01211acddd866d80b596c7",
+        "android_client_info": {
+          "package_name": "com.example.vichaar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrdZtBSaHZ3Vw47B2q7PNrEsHt4I023zY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -2,8 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vichaar/View/exploreScreen.dart';
 import 'package:vichaar/View/profileScreen.dart';
 import 'package:vichaar/View/searchScreen.dart';
+import 'package:vichaar/constant.dart';
 import '../View/addscreen.dart';
 import '../View/home.dart';
 
@@ -26,8 +28,8 @@ class _CustomNavbarState extends State<MyNavbar> {
   final List<Widget> pages=[
     HomeScreen(),
     AddScreen(),
-    SearchScreen(),
-    ProfileScreen(loggedUser: true,)
+    ExplorePage(),
+    ProfileScreen(loggedUser: true, throughBottomNav: true)
 
   ];
 
@@ -42,14 +44,15 @@ class _CustomNavbarState extends State<MyNavbar> {
             haptic: true, // haptic feedback
             tabBorderRadius: 10,
             selectedIndex: selectedIndex,
-            tabActiveBorder: Border.all(color: Colors.white, width: 0.9),
+           // tabActiveBorder: Border.all(color: Colors.white, width: 0.9),
             color: Colors.white54,
-            activeColor: Colors.white,
+            activeColor: kPurpleColor,
             gap: 10,
             onTabChange: (index) {
                 ChangePage(index);
             },
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.only(left: 10, right: 10),
+            //padding: const EdgeInsets.all(10),
             tabs:  [
               GButton(
                 icon: Icons.home,

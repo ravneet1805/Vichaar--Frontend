@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../Model/commentModel.dart';
 import '../Model/noteModel.dart';
@@ -14,10 +15,15 @@ import '../Model/userNoteModel.dart';
 
 class ApiService {
   static const String baseUrl = 
-  'https://vichaar.onrender.com'
-  //'http://localhost:4000'
+  //'https://vichaar.onrender.com'
+  //'http://localhost:8000'
+  //'http://10.0.2.2:8000'
+  'http://172.20.10.3:8000'
+
   ;
-   String? token;
+
+  
+  String? token;
 
   Future<String> getToken() async{
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -29,10 +35,31 @@ class ApiService {
  //--------------------N O T E S--------------------
 
   Future<List<Note>> getNotes() async {
+    print("notes api calling");
     token = await getToken();
 
     final response = await http.get(
       Uri.parse('$baseUrl/notes/'),
+      headers: {'Authorization': 'bearer $token'},
+    );
+
+    print(response.statusCode);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      print("user token sent to backend: $token");
+      return data.map((note) => Note.fromJson(note)).toList();
+    } else {
+      throw Exception(response.body);
+    }
+  }
+
+  Future<List<Note>> getFollowingNotes() async {
+    print("notes api calling");
+    token = await getToken();
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/notes/followingnotes'),
       headers: {'Authorization': 'bearer $token'},
     );
 
@@ -88,27 +115,47 @@ class ApiService {
     }
   }
 
-  Future<bool> saveNote(String noteTitle) async {
+  Future<bool> saveNote(String noteTitle, List skills, XFile? photo) async {
 
     token = await getToken();
+    try{
 
+    final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/notes/'));
 
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/notes/'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'bearer $token'
-        },
-        body: jsonEncode({'name': "username", 'title': noteTitle}),
-      );
+    request.headers['Authorization'] = 'bearer $token';
+    request.headers['Content-Type'] = 'application/json';
+    
 
-      return response.statusCode == 201;
-    } catch (error) {
-      print('Error: $error');
+    request.fields.addAll({
+      'title': noteTitle,
+      'requiredSkills': jsonEncode(skills),
+    });
+
+    if (photo != null) {
+      var stream = new http.ByteStream(photo!.openRead());
+      stream.cast();
+
+      var length = await photo!.length();
+      final imageFile = await http.MultipartFile('photo', stream, length);
+      request.files.add(imageFile);
+    }
+
+    var response = await request.send();
+
+    if (response.statusCode == 201) {
+      var responseBody = await response.stream.bytesToString();
+      print('Request successful: $responseBody');
+      return true;
+    } else {
+      print('Request failed with status: ${response.statusCode}');
       return false;
     }
+  } catch (e) {
+    print('Exception occurred: $e');
+    return false;
   }
+}
+  
 
   Future<bool> deleteNote(String id) async {
 
@@ -179,6 +226,36 @@ class ApiService {
   }
 
 
+  Future<List<dynamic>> fetchTrendingSkills() async {
+  final response = await http.get(Uri.parse('$baseUrl/notes/skills/trending'));
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  } else {
+    throw Exception('Failed to load trending skills');
+  }
+}
+
+Future<List<Note>> fetchTrendingNotes() async {
+  final response = await http.get(Uri.parse('$baseUrl/notes/trending'));
+  if (response.statusCode == 200) {
+    final List<dynamic> data = json.decode(response.body);
+      print("user token sent to backend: $data");
+      return data.map((note) => Note.fromJson(note)).toList();
+  } else {
+    throw Exception('Failed to load trending notes');
+  }
+}
+
+Future<List<dynamic>> fetchNotesForSpecificSkill(String skill) async {
+  final response = await http.get(Uri.parse('$baseUrl/notes/skill/$skill'));
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  } else {
+    throw Exception('Failed to load notes for skill');
+  }
+}
+
+
 //--------------------L I K E S--------------------
 
   Future<void> likeNote(String noteId) async {
@@ -232,8 +309,11 @@ class ApiService {
 
 
   Future<List<Comment>> getComments(String noteId) async {
+    print("note Id:"+ noteId);
 
     token = await getToken();
+
+    print("token:"+ token!);
 
     try {
       final response = await http.get(
@@ -283,6 +363,33 @@ class ApiService {
 
   //--------------------S E A R C H--------------------
 
+
+  Future<List<String>> getSkills(String id) async {
+  final String apiUrl = '$baseUrl/users/userdata/$id';
+
+  final response = await http.get(
+    Uri.parse(apiUrl),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'bearer $token',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    final responseData = json.decode(response.body);
+    // Like request successful
+    print('Data fetched successfully');
+
+    // Assuming 'following' field contains a list of user IDs
+    List<String> skillsList = List<String>.from(responseData[0]['skills']);
+    return skillsList;
+  } else {
+    print("error occured getting skills");
+    return [];
+  }
+}
+  
+
   Future<String> SearchedUserData(String id, String key) async{
     final String apiUrl = '$baseUrl/users/userdata/$id';
 
@@ -295,10 +402,11 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final responseData = json.decode(response.body);
-      // Like request successful
+      
       print('Data fetched Successfully');
+      print(responseData[0][key]);
 
-      return(responseData[0][key]);
+      return(responseData[0][key] ?? '');
     } else {
       // Handle error
       return('Failed, Status code: ${response.statusCode}');

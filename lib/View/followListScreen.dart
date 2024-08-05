@@ -98,12 +98,12 @@ class _FollowListScreenState extends State<FollowListScreen> {
                       },
                       child: ListTile(
                         title: Text(
-                          user['name'],
+                          user['fullName'] ?? '',
                           style: TextStyle(
                               color: Colors.white, fontWeight: FontWeight.bold),
                         ),
-                        subtitle: Text(
-                          user['email'],
+                        subtitle: Text("@"+
+                          user['userName' ?? ''],
                           style: TextStyle(color: Colors.white),
                         ),
                         leading: CircleAvatar(

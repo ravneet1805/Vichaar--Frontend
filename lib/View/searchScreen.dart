@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:vichaar/View/profileScreen.dart';
 import 'package:vichaar/constant.dart';
@@ -15,6 +18,7 @@ class _SearchScreenState extends State<SearchScreen> {
   List<User> _searchResults = [];
   bool _isLoading = false;
   final ApiService apiService = ApiService();
+  Timer? _debounce;
 
   Future<void> _searchUsers(String query) async {
     setState(() {
@@ -23,6 +27,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
     try {
       List<User> users = await apiService.searchUsers(query);
+
+      print(users);
 
       setState(() {
         _searchResults = users;
@@ -35,6 +41,13 @@ class _SearchScreenState extends State<SearchScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _debounce?.cancel(); // Cancel the timer on dispose
+    super.dispose();
   }
 
   @override
@@ -53,18 +66,19 @@ class _SearchScreenState extends State<SearchScreen> {
       ),
       //extendBodyBehindAppBar: true,
       body: Container(
-        decoration: BoxDecoration(gradient: kBgGradient),
+        
+        decoration: BoxDecoration(gradient: kBgGradient,color: Colors.red,),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               _buildSearchBar(),
               SizedBox(height: 16),
               _isLoading
                   ? Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      child: CupertinoActivityIndicator(
+                          color: kPurpleColor,
                       ),
                     )
                   : _buildSearchResults(),
@@ -101,7 +115,11 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
         ),
         onChanged: (query) {
-          _searchUsers(query);
+          if (_debounce?.isActive ?? false) _debounce!.cancel();
+          _debounce = Timer(const Duration(milliseconds: 500), () {
+            _searchUsers(query);
+          });
+        
         },
       ),
     );
@@ -121,12 +139,22 @@ class _SearchScreenState extends State<SearchScreen> {
                         image: _searchResults[index].image,
                       )));
             },
+            leading: CircleAvatar(
+      backgroundColor: kGreyColor,
+      radius: 35,
+      child:
+           ClipOval(
+              child: Image.network(
+             _searchResults[index].image
+            ))
+          
+    ),
             title: Text(
               _searchResults[index].name,
               style: TextStyle(color: Colors.white),
             ),
             subtitle: Text(
-              _searchResults[index].email,
+              "@${_searchResults[index].userName}",
               style: TextStyle(color: Colors.grey),
             ),
           );

@@ -7,11 +7,13 @@ import '../Components/UserNoteTile.dart';
 import '../Model/noteModel.dart';
 import '../Model/userNoteModel.dart';
 import '../Services/apiServices.dart';
+import 'shimmer.dart';
 
 class SearchedUserNoteList extends StatefulWidget {
   String id;
+  final String userName;
 
-  SearchedUserNoteList({Key? key, required this.id}) : super(key: key);
+  SearchedUserNoteList({Key? key, required this.id, this.userName = ''}) : super(key: key);
 
   @override
   State<SearchedUserNoteList> createState() => _SearchedUserNoteListState();
@@ -29,6 +31,7 @@ class _SearchedUserNoteListState extends State<SearchedUserNoteList> {
   late Future<String> userEmail;
 
   late String userID;
+
 
   @override
   void initState() {
@@ -56,7 +59,15 @@ class _SearchedUserNoteListState extends State<SearchedUserNoteList> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return SliverFillRemaining(
             child: Center(
-              child: CircularProgressIndicator(),
+              child: Column(
+                children: [
+                   ShimmerTile(),
+                   ShimmerTile(),
+                   ShimmerTile(),
+                   ShimmerTile()
+
+                ],
+              )
             ),
           );
         } else if (snapshot.hasError) {
@@ -83,16 +94,18 @@ class _SearchedUserNoteListState extends State<SearchedUserNoteList> {
                     padding: const EdgeInsets.all(8.0),
                     child: NoteTile(
                         title: userNote.title,
-                        name: '',
-                        time: userNote.getTimeAgo(),
+                        name: userNote.name,
+                        userName: widget.userName,
+                        time: userNote.formatTime(),
                         noteId: userNote.noteId,
                         likes: userNote.likes,
                         userID: userID,
                         comments: userNote.comments,
                         index: 0,
                         loggedID: userID,
-                        showUserName: false,
-                        image: '',
+                        tapUserName: false,
+                        image: userNote.image,
+                        postImage: userNote.postImage ?? '',
                         )
                     );
               },
