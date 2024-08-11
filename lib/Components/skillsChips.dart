@@ -38,7 +38,7 @@ class SkillsChips extends StatelessWidget {
               backgroundColor: kGreyColor,
               showCheckmark: false,
               shape: StadiumBorder(
-                side: BorderSide(color: isSelected? kPurpleColor : Colors.white),
+                side: BorderSide(color: isSelected? kPurpleColor : Colors.white30),
               ),
               labelStyle: TextStyle(
                 color:  Colors.white,

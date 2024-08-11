@@ -12,7 +12,7 @@ import '../Components/myNavBar.dart';
 import '../Components/skillsChips.dart';
 import '../Provider/skillsProvider.dart';
 import '../SnackBar/successSnackbar.dart';
- // Import your provider
+// Import your provider
 
 class ChooseSkillsScreen extends StatefulWidget {
   File? image;
@@ -21,16 +21,14 @@ class ChooseSkillsScreen extends StatefulWidget {
   String linkedinLink;
   String gitHubLink;
 
-  ChooseSkillsScreen({Key? key,
-
-    required this.image,
-    required this.fullName,
-  required this.bio,
-  required this.linkedinLink,
-  required this.gitHubLink
-    
-
-  }): super(key: key);
+  ChooseSkillsScreen(
+      {Key? key,
+      this.image,
+      this.fullName = '',
+      this.bio = '',
+      this.linkedinLink = '',
+      this.gitHubLink = ''})
+      : super(key: key);
 
   @override
   State<ChooseSkillsScreen> createState() => _ChooseSkillsScreenState();
@@ -38,33 +36,31 @@ class ChooseSkillsScreen extends StatefulWidget {
 
 class _ChooseSkillsScreenState extends State<ChooseSkillsScreen> {
   bool loading = false;
-  Future<void> saveDetails(BuildContext context, List<String> selectedSkills) async {
+  Future<void> saveDetails(
+      BuildContext context, List<String> selectedSkills) async {
     setState(() {
       loading = true;
     });
 
-    const url = '${ApiService.baseUrl}/users/updatesignup'; 
+    const url = '${ApiService.baseUrl}/users/updatesignup';
 
     String? token;
-  
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
     token = prefs.getString('user_token') ?? '';
-  
-
 
     final request = http.MultipartRequest('POST', Uri.parse(url));
-    print('tokennnnnnnnnnnnn:'+ token);
+    print('tokennnnnnnnnnnnn:' + token);
 
     request.headers['Authorization'] = 'bearer $token';
     request.headers['Content-Type'] = 'application/json';
 
-    print("fullName: "+ widget.fullName);
-    print("bio: "+ widget.bio);
-    print("github: "+ widget.gitHubLink);
-    print("linkedin: "+ widget.linkedinLink);
-    print("image: "+ widget.image.toString());
-    print("skills: "+ selectedSkills.toString());
-    
+    print("fullName: " + widget.fullName);
+    print("bio: " + widget.bio);
+    print("github: " + widget.gitHubLink);
+    print("linkedin: " + widget.linkedinLink);
+    print("image: " + widget.image.toString());
+    print("skills: " + selectedSkills.toString());
 
     request.fields.addAll({
       'fullName': widget.fullName,
@@ -84,35 +80,32 @@ class _ChooseSkillsScreenState extends State<ChooseSkillsScreen> {
     }
 
     var response = await request.send();
-    
-    
 
     // Upload image logic here
     var responseBody = await response.stream.bytesToString();
 
     if (response.statusCode == 200) {
-
       setState(() {
         loading = false;
+        context.read<SkillsProvider>().clearSkills();
       });
-      
-      final responseData = json.decode(responseBody);
 
+      final responseData = json.decode(responseBody);
 
       SuccessSnackbar.show(context, responseData['message']);
 
-
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setString('name', responseData['user']['fullName']?? '');
+      prefs.setString('name', responseData['user']['fullName'] ?? '');
       prefs.setString('bio', responseData['user']['bio']);
       prefs.setString('githubLink', responseData['user']['githubLink'] ?? '');
-        prefs.setString('linkedinLink', responseData['user']['linkedinLink'] ?? '');
-        List<String> skillsList =
-            (responseData['user']['skills'] as List<dynamic>)
-                .map((e) => e.toString())
-                .toList();
-        prefs.setStringList('skills', skillsList);
-        prefs.setString('image', responseData['user']['image'] ?? '');
+      prefs.setString(
+          'linkedinLink', responseData['user']['linkedinLink'] ?? '');
+      List<String> skillsList =
+          (responseData['user']['skills'] as List<dynamic>)
+              .map((e) => e.toString())
+              .toList();
+      prefs.setStringList('skills', skillsList);
+      prefs.setString('image', responseData['user']['image'] ?? '');
 
       Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => MyNavbar()),
@@ -120,7 +113,6 @@ class _ChooseSkillsScreenState extends State<ChooseSkillsScreen> {
 
       print(responseData);
     } else {
-
       setState(() {
         loading = false;
       });
@@ -128,7 +120,6 @@ class _ChooseSkillsScreenState extends State<ChooseSkillsScreen> {
 
       ErrorSnackbar.show(context, responseData['message']);
 
-      
       print('Error: ${response.statusCode}');
       print('Response: ${responseBody}');
     }
@@ -225,10 +216,11 @@ class _ChooseSkillsScreenState extends State<ChooseSkillsScreen> {
                   SizedBox(height: 30),
                   GestureDetector(
                     onTap: () {
-                      if(loading == false){
-                      final selectedSkills = context.read<SkillsProvider>().selectedSkills;
-                      print('Selected Skills: $selectedSkills');
-                      saveDetails(context, selectedSkills);
+                      if (loading == false) {
+                        final selectedSkills =
+                            context.read<SkillsProvider>().selectedSkills;
+                        print('Selected Skills: $selectedSkills');
+                        saveDetails(context, selectedSkills);
                       }
                       // Implement save logic here
                     },
@@ -240,15 +232,13 @@ class _ChooseSkillsScreenState extends State<ChooseSkillsScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Center(
-                        child:
-                        loading
-                        ? CupertinoActivityIndicator(
-                          color: Colors.white
-                        )
-                         :Text(
-                          'Save',
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
+                        child: loading
+                            ? CupertinoActivityIndicator(color: Colors.white)
+                            : Text(
+                                'Save',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 16),
+                              ),
                       ),
                     ),
                   ),

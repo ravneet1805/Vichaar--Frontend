@@ -121,18 +121,22 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                         .snapshots(),
                     builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                       if (!snapshot.hasData) {
-                        return Center(child: CircularProgressIndicator());
+                        return Center(child: _buildShimmer());
                       }
-
+                      print("getting conversation list...");
                       final chatRooms = snapshot.data!.docs;
+
+                      print(chatRooms);
+
 
                       return ListView.builder(
                         itemCount: chatRooms.length,
-                        itemBuilder: (context, index) {
+                        itemBuilder: (context, index) {print("getting conversation list...xxxxxxxxx");
                           var chatRoom = chatRooms[index];
                           var participants = List<String>.from(chatRoom['participants']);
                           participants.remove(widget.userId);
                           String otherUserId = participants[0];
+                          print("getting conversation list...222222222");
 
                           return FutureBuilder(
                             future: _fetchUserData(otherUserId),
@@ -155,6 +159,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                               String fullName = userData['fullName'];
                               String photoUrl = userData['photoUrl'];
                               String userName = userData['userName'];
+                              print("getting conversation list...");
 
                               return StreamBuilder(
                                 stream: chatRoom.reference.collection('messages')
@@ -233,5 +238,14 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
       'photoUrl': photoUrl,
       'userName': userName
     };
+  }
+
+  Widget _buildShimmer() {
+    return ListView.builder(
+      itemCount: 10,
+      itemBuilder: (context, index) {
+        return ShimmerTile();
+      },
+    );
   }
 }

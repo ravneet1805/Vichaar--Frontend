@@ -1,56 +1,46 @@
 import 'package:flutter/material.dart';
-import 'package:vichaar/Services/apiServices.dart';
-import 'package:vichaar/View/profileScreen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import '../Components/shimmer.dart';
+import '../Model/userModel.dart';
+import '../Services/apiServices.dart';
+import '../View/profileScreen.dart';
 import '../constant.dart';
+import 'shimmer.dart';
 
-class FollowListScreen extends StatefulWidget {
-  bool followers;
-  String id;
-  final String title;
-  String loggedID = '';
-  bool loggedUser;
 
-  FollowListScreen(
-      {required this.followers,
-      required this.title,
-      required this.id,
-      required this.loggedID,
-      this.loggedUser = false,
-      
-      });
+
+class InterestedSection extends StatefulWidget {
+  String noteId;
+  InterestedSection({super.key, required this.noteId});
 
   @override
-  State<FollowListScreen> createState() => _FollowListScreenState();
+  State<InterestedSection> createState() => _InterestedSectionState();
+
 }
 
-class _FollowListScreenState extends State<FollowListScreen> {
+class _InterestedSectionState extends State<InterestedSection> {
   ApiService apiService = ApiService();
-  List<dynamic> userList = [];
+  List<User> userList = [];
   bool isLoading = true;
+  String loggedID = '';
 
   @override
   void initState() {
     super.initState();
-    // Call fetchList in initState
+    fetchLoggedId();
     fetchList();
   }
+
+  Future<void> fetchLoggedId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    loggedID =  prefs.getString("userID") ?? "N/A";
+  }
+
 
   void fetchList() async {
     try {
       // Fetch data
-      userList = widget.followers
-          ? await apiService.getFollowers(
-            widget.loggedUser?
-            widget.loggedID
-            :widget.id
-            )
-          : await apiService.getFollowing(
-            widget.loggedUser?
-            widget.loggedID
-            :widget.id
-            );
+      userList = await apiService.getInterested(widget.noteId);
       print(userList);
     } catch (e) {
       // Handle error
@@ -62,13 +52,12 @@ class _FollowListScreenState extends State<FollowListScreen> {
       });
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kBgcolor,
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text("Interested"),
       ),
       body: isLoading
           ? Center(
@@ -90,37 +79,37 @@ class _FollowListScreenState extends State<FollowListScreen> {
                       onTap: () {
                         Navigator.of(context).push(MaterialPageRoute(
                             builder: (context) => ProfileScreen(
-                                  loggedUser: (widget.loggedID == widget.id)
+                                  loggedUser: (loggedID == user.userId)
                                       ? true
                                       : false,
-                                  id: user['_id'],
-                                  image: user['image'],
+                                  id: user.userId,
+                                  image: user.image,
                                 )));
                       },
                       child: ListTile(
                         title: Text(
-                          user['fullName'] ?? '',
+                          user.name ?? '',
                           style: TextStyle(
                               color: Colors.white, fontWeight: FontWeight.bold),
                         ),
-                        subtitle: Text("@${user['userName']?? ''}",
+                        subtitle: Text("@"+
+                          user.userName,
                           style: TextStyle(color: Colors.white),
                         ),
                         leading: CircleAvatar(
                           radius: 20,
                           backgroundColor: Colors.white,
-                          backgroundImage: user.containsKey('image')
-                              ? NetworkImage(user['image'])
-                              : NetworkImage(''),
+                          backgroundImage: user.image != ""
+                              ? NetworkImage(user.image)
+                              : null
                         ),
                       ),
                     );
                   },
                 ),
     );
-    
   }
-  
+
    Widget _buildShimmer() {
     return ListView.builder(
       itemCount: 10,

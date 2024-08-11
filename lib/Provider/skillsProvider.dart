@@ -16,6 +16,11 @@ class SkillsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void setSelectedSkills(List<String> skills) {
+    _selectedSkills = skills;
+    notifyListeners(); // Notify listeners to update the UI
+  }
+
   void clearSkills() {
     _selectedSkills.clear();
     notifyListeners();

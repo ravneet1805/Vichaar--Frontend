@@ -1,27 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:vichaar/Components/noteTile.dart';
 import 'package:vichaar/Components/readMore.dart';
 import 'package:vichaar/Components/shimmer.dart';
 import 'package:vichaar/Model/noteModel.dart';
+import 'package:vichaar/Provider/preFetchProvider.dart';
 import 'package:vichaar/constant.dart';
 import '../Components/UserNoteTile.dart';
 import '../Model/userNoteModel.dart';
 import '../Services/apiServices.dart';
 
 class UserNoteList extends StatefulWidget {
-  // final List<UserNote> userNotes;
-  // final Function(BuildContext, UserNote) onEdit;
-  // final Function(BuildContext, UserNote) onDelete;
+
   final String userName;
   final String name;
   final String image;
 
   const UserNoteList({
     Key? key,
-    // required this.userNotes,
-    // required this.onEdit,
-    // required this.onDelete,
     this.userName = '',
     this.name = '',
     this.image = ''
@@ -45,20 +42,22 @@ class _UserNoteListState extends State<UserNoteList> {
   @override
   void initState() {
     super.initState();
-    notes = apiService.getUserNotes();
-    notes.then((List<UserNote> data) {
-      setState(() {
-        length = data.length;
-      });
-    });
+    //  notes = apiService.getUserNotes();
+    // notes.then((List<UserNote> data) {
+    //   setState(() {
+    //     length = data.length;
+    //   });
+    // });
+
+
+
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<UserNote>>(
-      future: notes,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+    return Consumer<PreFetchProvider>(
+      builder: (context, noteProvider, child) {
+        if (noteProvider.isLoading) {
           return SliverFillRemaining(
             child: Center(
               child: Column(
@@ -74,26 +73,17 @@ class _UserNoteListState extends State<UserNoteList> {
               
             ),
           );
-        } else if (snapshot.hasError) {
+        } else if (noteProvider.loggedUserNotes.isEmpty) {
           return SliverFillRemaining(
             child: Center(
-              child: Text('Error: ${snapshot.error}'),
-            ),
-          );
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return SliverFillRemaining(
-            child: Center(
-              child:  Text(
-                'You have not posted anything yet.',
-                style: TextStyle(color: Colors.white70),
-              ),
+              child: Text('No Posts Available'),
             ),
           );
         } else {
           return SliverList(
             delegate: SliverChildBuilderDelegate(
               (BuildContext context, int index) {
-                var userNote = snapshot.data?[index];
+                var userNote = noteProvider.loggedUserNotes[index];
                 return Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: ListTile(
@@ -190,6 +180,7 @@ class _UserNoteListState extends State<UserNoteList> {
                         time: userNote.formatTime(),
                         noteId: userNote.noteId,
                         likes: userNote.likes,
+                        interested: userNote.interested,
                         userID: userNote.userId,
                         comments: userNote.comments,
                         index: 0,
@@ -197,25 +188,8 @@ class _UserNoteListState extends State<UserNoteList> {
                         tapUserName: false,
                         image: widget.image,
                         postImage: userNote.postImage ?? '',
+                        skills: [],
                         )
-                    // Container(
-                    //   child: Center(
-                    //     child: Padding(
-                    //       padding: const EdgeInsets.all(8.0),
-                    //       child: ReadMoreText(text: userNote?. ?? '', maxLines: 6,)
-                          
-                          
-                          
-                    //       Text(
-                    //         userNote?.title ?? '',
-                    //         style: TextStyle(
-                    //           color: Colors.white,
-                    //           fontSize: 16,
-                    //         ),
-                    //     ),
-                    //     ),
-                    //   ),
-                    // ),
                   ),
                 );
               },

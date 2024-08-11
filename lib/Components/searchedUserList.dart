@@ -99,6 +99,7 @@ class _SearchedUserNoteListState extends State<SearchedUserNoteList> {
                         time: userNote.formatTime(),
                         noteId: userNote.noteId,
                         likes: userNote.likes,
+                        interested: userNote.interested,
                         userID: userID,
                         comments: userNote.comments,
                         index: 0,
@@ -106,6 +107,7 @@ class _SearchedUserNoteListState extends State<SearchedUserNoteList> {
                         tapUserName: false,
                         image: userNote.image,
                         postImage: userNote.postImage ?? '',
+                        skills: userNote.skills ?? [],
                         )
                     );
               },

@@ -39,7 +39,7 @@ class ApiService {
     token = await getToken();
 
     final response = await http.get(
-      Uri.parse('$baseUrl/notes/'),
+      Uri.parse('$baseUrl/notes/recomendedNotes'),
       headers: {'Authorization': 'bearer $token'},
     );
 
@@ -115,7 +115,7 @@ class ApiService {
     }
   }
 
-  Future<bool> saveNote(String noteTitle, List skills, XFile? photo) async {
+  Future<bool> saveNote(String noteTitle, List<String> skills, XFile? photo) async {
 
     token = await getToken();
     try{
@@ -128,7 +128,7 @@ class ApiService {
 
     request.fields.addAll({
       'title': noteTitle,
-      'requiredSkills': jsonEncode(skills),
+      'requiredSkills': json.encode(skills),
     });
 
     if (photo != null) {
@@ -304,6 +304,88 @@ Future<List<Note>> fetchNotesForSkill(String skill) async {
       print('Failed to Unlike note. Status code: ${response.statusCode}');
     }
   }
+
+
+  //--------------------I N T E R E S T E D--------------------
+
+
+  Future<List<User>> getInterested(String noteId) async {
+    print("note Id:"+ noteId);
+
+    token = await getToken();
+
+    print("token:"+ token!);
+
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/notes/getInterestedUsers/$noteId'),
+        headers: {'Authorization': 'bearer $token'},
+        // Include any necessary headers or authentication tokens
+      );
+
+      if (response.statusCode == 200) {
+        print(response.body);
+
+        final List<dynamic> data = json.decode(response.body);
+
+        return data.map((user) => User.fromJson(user)).toList();
+      } else {
+        throw Exception('Failed to load interested Users');
+      }
+    } catch (error) {
+      throw Exception('Error: $error');
+    }
+  }
+
+
+  Future<void> markInterested(String noteId) async {
+    token = await getToken();
+    print('note id: $noteId');
+    print('token : $token');
+    final String apiUrl = '$baseUrl/notes/interested/$noteId';
+
+    
+    final response = await http.put(Uri.parse(apiUrl),
+    headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'bearer $token'
+          });
+
+    if (response.statusCode == 200) {
+      // Like request successful
+      print('Interested successfully');
+      print(response.body);
+    } else {
+      // Handle error
+      print('Failed to interest note. Status code: ${response.statusCode}');
+    }
+  }
+
+  Future<void> notInterested(String noteId) async {
+    token = await getToken();
+    print('note id: $noteId');
+    print('token : $token');
+    final String apiUrl = '$baseUrl/notes/notInterested/$noteId';
+
+    
+    final response = await http.put(Uri.parse(apiUrl),
+    headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'bearer $token'
+          });
+
+    if (response.statusCode == 200) {
+      // Like request successful
+      print('Not Interested successfully');
+      print(response.body);
+    } else {
+      // Handle error
+      print('Failed to not Interest note. Status code: ${response.statusCode}');
+    }
+  }
+
+
+
 
 
   //--------------------C O M M E N T S--------------------

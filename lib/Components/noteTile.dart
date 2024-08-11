@@ -1,11 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vichaar/Components/interestedSection.dart';
 import 'package:vichaar/constant.dart';
 import 'package:vichaar/Services/apiServices.dart';
-
 import '../Model/commentModel.dart';
 import '../View/profileScreen.dart';
 import 'commentSection.dart';
@@ -24,6 +24,8 @@ class NoteTile extends StatefulWidget {
   String? loggedID;
   final List<dynamic> likes;
   final List<dynamic> comments;
+  final List<dynamic> interested;
+  final List<dynamic> skills;
   final int index;
   final bool tapUserName;
 
@@ -37,8 +39,10 @@ class NoteTile extends StatefulWidget {
     required this.likes,
     required this.userID,
     required this.comments,
+    required this.interested,
     required this.image,
     required this.index,
+    required this.skills,
     this.tapUserName = true,
     this.loggedID,
     this.postImage = '',
@@ -54,6 +58,7 @@ class _NoteTileState extends State<NoteTile>
   bool isLiked = false;
   bool isInterested = false;
   int likesCount = 0;
+  int interestedCount = 0;
   int commentcount = 0;
 
   @override
@@ -65,17 +70,23 @@ class _NoteTileState extends State<NoteTile>
   @override
   void initState() {
     super.initState();
+    print('Skills list: ${widget.skills}');
+
 
     setState(() {
       isLiked = widget.likes.contains(widget.loggedID);
+      isInterested = widget.interested.contains(widget.loggedID);
+
     });
 
     likesCount = widget.likes.length;
     commentcount = widget.comments.length;
+    interestedCount = widget.interested.length;
   }
 
   @override
   Widget build(BuildContext context) {
+    
     super.build(context);
     var mq = MediaQuery.of(context).size;
     return ListTile(
@@ -157,12 +168,7 @@ class _NoteTileState extends State<NoteTile>
                   ],
                 ),
               ),
-              // : Container(),
-              // Text(
-              //   widget.time,
-              //   style: TextStyle(
-              //       color: Colors.grey, overflow: TextOverflow.ellipsis),
-              // ),
+            
             ],
           ),
           //SizedBox(height: 10),
@@ -190,6 +196,7 @@ class _NoteTileState extends State<NoteTile>
                             widget.postImage,
                             height: mq.height * 0.3,
                             width: double.maxFinite,
+                            
                             loadingBuilder: (BuildContext context, Widget child,
                                 ImageChunkEvent? loadingProgress) {
                               if (loadingProgress == null) {
@@ -205,13 +212,28 @@ class _NoteTileState extends State<NoteTile>
                             },
                             errorBuilder: (BuildContext context,
                                 Object exception, StackTrace? stackTrace) {
-                              return Icon(Icons.error);
+                              return Image.asset(
+                      'assets/icons/default_profile.png');
                             },
                             fit: BoxFit.cover,
                           ),
                         ),
                       )
                     : Container()),
+                  
+          ),
+          SizedBox(height: 10),
+          Row(
+            children: [
+              widget.skills.join(', ') != "[]"
+              ? Container(
+                 width: mq.width * 0.7,
+                child: Text("Skills: ${widget.skills.join(', ')}",
+                overflow: TextOverflow.visible,
+                style: GoogleFonts.comfortaa(color: Colors.grey, fontSize: 12)),
+              )
+              : Container()
+            ],
           ),
           SizedBox(height: 20),
           Row(
@@ -292,10 +314,41 @@ class _NoteTileState extends State<NoteTile>
               ),
               SizedBox(width: 16),
               IconButton(
-                  onPressed: () {
+                  onPressed: () async {
+
+                    final noteId = widget.noteId;
+
+                  setState(() {
+                    if (isInterested) {
+                      interestedCount--;
+                    } else {
+                      interestedCount++;
+                    }
+                    isInterested = !isInterested;
+                  });
+
+                  try {
+                    if (isInterested) {
+                      await apiService.markInterested(noteId);
+                    } else {
+                      await apiService.notInterested(noteId);
+                    }
+                  } catch (e) {
+                    // If the API call fails, revert the changes
                     setState(() {
-                      isInterested = !isInterested;
+                       if (isInterested) {
+                      interestedCount--;
+                    } else {
+                      interestedCount++;
+                    }
+                    isInterested = !isInterested;
                     });
+                    // Optionally, show an error message to the user
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(
+                          'Failed to update interested status. Please try again.'),
+                    ));
+                  }
                   },
                   icon: Icon(
                     isInterested
@@ -303,7 +356,25 @@ class _NoteTileState extends State<NoteTile>
                         : CupertinoIcons.group,
                     color: isInterested ? kPurpleColor : Colors.grey,
                     size: 30,
-                  ))
+                  )),
+                  GestureDetector(
+                    onTap: (){
+
+                      Navigator.push(
+                          context,
+                          PageTransition(
+                            type: PageTransitionType.bottomToTop,
+                            child: InterestedSection(
+                              noteId: widget.noteId,
+                            ),
+                          ));
+
+                    },
+                    child: Text(
+                                    interestedCount.toString(),
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                  ),
             ],
           ),
           Divider(thickness: 0.1)

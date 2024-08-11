@@ -2,14 +2,17 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:page_transition/page_transition.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vichaar/Components/shimmer.dart';
 import 'package:vichaar/View/conversationsScreen.dart';
 import 'package:vichaar/constant.dart';
 
+
 import '../Components/noteTile.dart';
-import '../Model/noteModel.dart';
-import '../Services/apiServices.dart';
+import '../Provider/preFetchProvider.dart';
+import 'notificationScreen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -17,42 +20,28 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final ApiService apiService = ApiService();
-  late Future<List<Note>> notesForYou;
-  late Future<List<Note>> notesFollowing;
-  late String userID;
   final ScrollController _scrollControllerForYou = ScrollController();
   final ScrollController _scrollControllerFollowing = ScrollController();
-  int _pageForYou = 1;
-  int _pageFollowing = 1;
-  bool _isFetchingForYou = false;
-  bool _isFetchingFollowing = false;
+  String loggedID = "";
 
   @override
   void initState() {
+    fetchLoggedId();
     super.initState();
-    notesForYou = apiService.getNotes();
-    notesFollowing = apiService.getFollowingNotes();
-
-    
-    fetchUserID();
   }
 
-  Future<void> fetchUserID() async {
+  Future<void> fetchLoggedId() async{
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    userID = prefs.getString('userID') ?? "N/A";
+    loggedID = prefs.getString("userID") ?? '';
+    print("userId form local storage: "+ loggedID );
   }
 
   Future<void> _refreshNotesForYou() async {
-    setState(() {
-      notesForYou = apiService.getNotes();
-    });
+    await Provider.of<PreFetchProvider>(context, listen: false).fetchNotes();
   }
 
   Future<void> _refreshNotesFollowing() async {
-    setState(() {
-      notesFollowing = apiService.getFollowingNotes();
-    });
+    await Provider.of<PreFetchProvider>(context, listen: false).fetchNotes();
   }
 
   void _scrollToTop(ScrollController controller) {
@@ -71,7 +60,6 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (BuildContext context) {
           return Scaffold(
             appBar: AppBar(
-              
               toolbarHeight: MediaQuery.of(context).size.height * 0.09,
               backgroundColor: kGreyColor,
               title: GestureDetector(
@@ -88,18 +76,28 @@ class _HomeScreenState extends State<HomeScreen> {
               automaticallyImplyLeading: false,
               actions: [
                 IconButton(
-                  icon: Icon(FluentIcons.alert_12_regular, color: Colors.grey,),
+                  icon: Icon(CupertinoIcons.bell, color: Colors.grey,),
                   onPressed: () {
-                    // Handle notifications button press
+                    //   Navigator.push(
+                    //       context,
+                    //       PageTransition(
+                    //         type: PageTransitionType.topToBottom,
+                    //         child: NotificationScreen()
+                    //   ),
+                    // );
+                     Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => NotificationScreen()),
+    );
                   },
                 ),
                 IconButton(
-                  icon: Icon(FluentIcons.chat_12_regular, color: Colors.grey,),
+                  icon: Icon(CupertinoIcons.chat_bubble_text, color: Colors.grey,),
                   onPressed: () {
                     Navigator.push<void>(
                       context,
                       MaterialPageRoute<void>(
-                        builder: (BuildContext context) => ConversationsScreen(userId: userID,),
+                        builder: (BuildContext context) => ConversationsScreen(userId: loggedID), // You can pass the user ID here as needed
                       ),
                     );
                   },
@@ -134,8 +132,8 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(gradient: kBgGradient),
               child: TabBarView(
                 children: [
-                  buildNotesList(notesForYou, _refreshNotesForYou, _scrollControllerForYou),
-                  buildNotesList(notesFollowing, _refreshNotesFollowing, _scrollControllerFollowing),
+                  buildNotesList(_refreshNotesForYou, _scrollControllerForYou,),
+                  buildFollowingNotesList(_refreshNotesFollowing, _scrollControllerFollowing),
                 ],
               ),
             ),
@@ -145,38 +143,84 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget buildNotesList(Future<List<Note>> notesFuture, Future<void> Function() onRefresh, ScrollController scrollController) {
+  Widget buildNotesList(Future<void> Function() onRefresh, ScrollController scrollController) {
     return RefreshIndicator(
       onRefresh: onRefresh,
       color: kPurpleColor,
-      child: FutureBuilder<List<Note>>(
-        future: notesFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+      child: Consumer<PreFetchProvider>(
+        builder: (context, noteProvider, child) {
+          if (noteProvider.isLoading) {
             return _buildShimmer();
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (noteProvider.notesForYou.isEmpty) {
+            return Center(child: Text('No Posts Available'));
           } else {
             return ListView.builder(
               controller: scrollController,
-              itemCount: snapshot.data!.length,
+              itemCount: noteProvider.notesForYou.length,
               itemBuilder: (context, index) {
                 return Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: NoteTile(
-                    name: snapshot.data![index].name,
-                    title: snapshot.data![index].title,
-                    userID: snapshot.data![index].userId,
-                    userName: snapshot.data![index].userName,
-                    loggedID: userID,
-                    time: snapshot.data![index].formatTime(),
-                    noteId: snapshot.data![index].noteId,
-                    likes: snapshot.data![index].likes,
-                    comments: snapshot.data![index].comments,
-                    image: snapshot.data![index].image,
-                    postImage: snapshot.data![index].postImage ?? '',
+                    name: noteProvider.notesForYou[index].name,
+                    title: noteProvider.notesForYou[index].title,
+                    userID: noteProvider.notesForYou[index].userId,
+                    userName: noteProvider.notesForYou[index].userName,
+                    loggedID: loggedID,
+                    time: noteProvider.notesForYou[index].formatTime(),
+                    noteId: noteProvider.notesForYou[index].noteId,
+                    likes: noteProvider.notesForYou[index].likes,
+                    interested: noteProvider.notesForYou[index].interested,
+                    comments: noteProvider.notesForYou[index].comments,
+                    image: noteProvider.notesForYou[index].image,
+                    postImage: noteProvider.notesForYou[index].postImage ?? '',
+                    skills: noteProvider.notesForYou[index].skills ?? [],
                     index: index,
                   ),
+                );
+              },
+              addAutomaticKeepAlives: true,
+            );
+          }
+        },
+      ),
+    );
+  }
+
+  Widget buildFollowingNotesList(Future<void> Function() onRefresh, ScrollController scrollController) {
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      color: kPurpleColor,
+      child: Consumer<PreFetchProvider>(
+        builder: (context, noteProvider, child) {
+          if (noteProvider.isLoading) {
+            return _buildShimmer();
+          } else if (noteProvider.notesFollowing.isEmpty) {
+            return Center(child: Text('No Posts Available'));
+          } else {
+            return ListView.builder(
+              controller: scrollController,
+              itemCount: noteProvider.notesFollowing.length,
+              itemBuilder: (context, index) {
+                print(noteProvider.notesFollowing[index].skills);
+                return Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: NoteTile(
+                    name: noteProvider.notesFollowing[index].name,
+                    title: noteProvider.notesFollowing[index].title,
+                    userID: noteProvider.notesFollowing[index].userId,
+                    userName: noteProvider.notesFollowing[index].userName,
+                    loggedID: "userID", // Use the logged-in user ID here
+                    time: noteProvider.notesFollowing[index].formatTime(),
+                    noteId: noteProvider.notesFollowing[index].noteId,
+                    likes: noteProvider.notesFollowing[index].likes,
+                    interested: noteProvider.notesFollowing[index].interested,
+                    comments: noteProvider.notesFollowing[index].comments,
+                    image: noteProvider.notesFollowing[index].image,
+                    postImage: noteProvider.notesFollowing[index].postImage ?? '',
+                    skills: noteProvider.notesFollowing[index].skills ?? [],
+                    index: index,
+                  ),
+                  
                 );
               },
               addAutomaticKeepAlives: true,

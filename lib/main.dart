@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vichaar/AuthPages/forgetPasswordOtpScreen.dart';
 import 'package:vichaar/AuthPages/login.dart';
 import 'package:vichaar/View/OnBoard/detailsScreen.dart';
@@ -13,9 +14,12 @@ import 'package:vichaar/View/linkedinLogin.dart';
 import 'package:flutter_portal/flutter_portal.dart';
 import 'AuthPages/signup.dart';
 import 'Components/myNavBar.dart';
+import 'Provider/notificationProvider.dart';
+import 'Provider/preFetchProvider.dart';
 import 'Provider/skillsProvider.dart';
 import 'Provider/typingProvider.dart';
 import 'Services/firebase_messaging_service.dart';
+import 'Socket/webSocket.dart';
 import 'View/addscreen.dart';
 import 'View/home.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -33,17 +37,21 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  final FirebaseMessagingService firebaseMessagingService = FirebaseMessagingService();
+  final FirebaseMessagingService firebaseMessagingService =
+      FirebaseMessagingService();
   await firebaseMessagingService.requestPermission();
   await firebaseMessagingService.initialize();
-  getDeviceToken();
 
-  runApp(MultiProvider(
-    providers: [
-      ChangeNotifierProvider(create: (_) => TypingProvider()),
-      ChangeNotifierProvider(create: (_) => SkillsProvider()),
-    ],
-    child: MyApp()));
+  runApp(MultiProvider(providers: [
+    ChangeNotifierProvider(create: (_) => TypingProvider()),
+    ChangeNotifierProvider(create: (_) => SkillsProvider()),
+    ChangeNotifierProvider(create: (_) => PreFetchProvider()..fetchNotes()),
+    ChangeNotifierProvider(create: (_) => NotificationProvider()),
+    Provider<WebSocketService>(
+      create: (_) => WebSocketService(), // Initialize once here
+      dispose: (_, webSocketService) => webSocketService.dispose(),
+    ),
+  ], child: MyApp()));
 }
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -51,8 +59,43 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print('Handling a background message: ${message.messageId}');
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WebSocketService();
+    final webSocketService =
+        Provider.of<WebSocketService>(context, listen: false);
+    webSocketService.connect(); // Establish the WebSocket connection
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    Provider.of<WebSocketService>(context, listen: false)
+        .dispose(); // Dispose WebSocket connection
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final webSocketService =
+        Provider.of<WebSocketService>(context, listen: false);
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      webSocketService.dispose();
+    } else if (state == AppLifecycleState.resumed) {
+      webSocketService.connect(); // Reconnect on resume
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,8 +122,10 @@ class MyApp extends StatelessWidget {
       print("onMessageOpenedApp: ${message.notification?.title}");
       // Handle notification click
       // For example, navigate to a specific screen
-      Navigator.pushNamed(context, '/someScreen'); // Replace '/someScreen' with your route
+      Navigator.pushNamed(
+          context, '/someScreen'); // Replace '/someScreen' with your route
     });
+
     return Portal(
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -92,7 +137,8 @@ class MyApp extends StatelessWidget {
             foregroundColor: Colors.transparent,
             backgroundColor: Colors.transparent,
             surfaceTintColor: Colors.transparent,
-            titleTextStyle: GoogleFonts.comfortaa(color: Colors.white, fontSize: 24),
+            titleTextStyle:
+                GoogleFonts.comfortaa(color: Colors.white, fontSize: 24),
             elevation: 0,
             iconTheme: IconThemeData(color: Colors.white),
           ),
@@ -102,7 +148,10 @@ class MyApp extends StatelessWidget {
         routes: {
           '/nav': (context) => MyNavbar(),
           '/onBoard': (context) => OnboardingHomeScreen(),
-          '/details': (context) => DetailsScreen(linkedinLink: '', gitHubLink: '',),
+          '/details': (context) => DetailsScreen(
+                linkedinLink: '',
+                gitHubLink: '',
+              ),
           '/home': (context) => HomeScreen(),
           '/links': (context) => LinksScreen(),
           '/login': (context) => LoginScreen(),
@@ -112,11 +161,11 @@ class MyApp extends StatelessWidget {
           '/editProfile': (context) => UpdateProfileScreen(),
           '/add': (context) => AddScreen(),
           '/search': (context) => HomeScreen(),
-          '/linked': (context)=> WebViewExample(),
-          '/explore': (context)=> ExplorePage(),
-         // '/chat': (context) => ChatScreen(senderId: '65a51d33ae9549ea16b57a84', receiverId: '666f621e20b65f427f01c765',),
+          '/linked': (context) => WebViewExample(),
+          '/explore': (context) => ExplorePage(),
+          // '/chat': (context) => ChatScreen(senderId: '65a51d33ae9549ea16b57a84', receiverId: '666f621e20b65f427f01c765',),
           '/convolist': (context) => ConversationsScreen(userId: ''),
-         // '/skill': (context) => ChooseSkillsScreen()
+          // '/skill': (context) => ChooseSkillsScreen()
         },
       ),
     );

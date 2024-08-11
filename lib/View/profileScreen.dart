@@ -163,7 +163,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<String> fetchUserData(String key) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    fullNameForChat = prefs.getString(key) ?? "";
     return prefs.getString(key) ?? "N/A";
   }
 
@@ -445,7 +444,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           widget.loggedUser
               ? UserNoteList(name: name, image: image, userName: '')
-              : SearchedUserNoteList(id: widget.id, userName: 'userName')
+              : SearchedUserNoteList(id: widget.id, userName: userNameForChat)
         ],
       ),
     );

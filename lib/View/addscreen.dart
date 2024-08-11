@@ -1,15 +1,20 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:provider/provider.dart';
 import 'package:vichaar/Components/skillsChips.dart';
 import 'package:vichaar/SnackBar/errorSnackBar.dart';
 import 'package:vichaar/SnackBar/successSnackbar.dart';
+import 'package:vichaar/View/chooseSkills.dart';
 import 'package:vichaar/constant.dart';
 
+import '../Provider/skillsProvider.dart';
 import '../Services/apiServices.dart';
 
 class AddScreen extends StatefulWidget {
@@ -21,32 +26,32 @@ class AddScreen extends StatefulWidget {
 
 class _AddScreenState extends State<AddScreen> {
   final TextEditingController titleController = TextEditingController();
-  List<String> selectedHardSkills = [];
-  List<String> selectedSkills = [];
-  bool loader  = false;
+
+  bool loader = false;
 
   Future<void> saveNote() async {
     final String noteTitle = titleController.text;
-    List skills = [];
-  
+
+
+    final selectedSkills = context.read<SkillsProvider>().selectedSkills;
+
 
     ApiService apiService = ApiService();
-     setState(() {
+    setState(() {
       loader = true;
     });
     print(loader);
 
     final bool success = await apiService.saveNote(
       noteTitle,
-      skills,
+      selectedSkills,
       _imageFile,
     );
-   
 
     if (success) {
-
       setState(() {
         loader = false;
+        context.read<SkillsProvider>().clearSkills();
       });
 
       // Note saved successfully, you can navigate back or perform other actions
@@ -54,15 +59,13 @@ class _AddScreenState extends State<AddScreen> {
       _removeImage();
 
       SuccessSnackbar.show(context, 'Posted Successfully.');
-
     } else {
       // Handle errors, you can show an error message to the user
-       setState(() {
+      setState(() {
         loader = false;
       });
 
       ErrorSnackbar.show(context, 'Failed to save note. Please try again.');
-
     }
   }
 
@@ -132,8 +135,10 @@ class _AddScreenState extends State<AddScreen> {
                           //fillColor: kGreyColor,
                           hintText:
                               'A brief, compelling summary of your idea...',
-                          hintStyle:
-                              TextStyle(color: Colors.white24, fontSize: 14, overflow: TextOverflow.visible),
+                          hintStyle: TextStyle(
+                              color: Colors.white24,
+                              fontSize: 14,
+                              overflow: TextOverflow.visible),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide.none,
@@ -171,9 +176,9 @@ class _AddScreenState extends State<AddScreen> {
                       ),
                     Padding(
                       padding: const EdgeInsets.symmetric(
-                          vertical: 20.0, 
-                          //horizontal: 16
-                           ),
+                        vertical: 20.0,
+                        //horizontal: 16
+                      ),
                       child: Align(
                         alignment: Alignment.centerRight,
                         child: IconButton(
@@ -195,26 +200,63 @@ class _AddScreenState extends State<AddScreen> {
                     Text('Required Skills:',
                         style:
                             TextStyle(color: kGreyHeadTextcolor, fontSize: 18)),
-                    //   SkillsChips(availableSkills: hardSkillsGroup1, selectedSkills: selectedHardSkills,   onChanged: (val) {
-                    //                     setState(() {
-                    //  // selectedSkills += val;
-                    //                     });
-                    //                   },),
-                    //   SkillsChips(availableSkills: softSkillsGroup1, selectedSkills: selectedHardSkills,    onChanged: (val) {
-                    //                         setState(() {
-                    //      // selectedSkills += val;
-                    //                         });
-                    //                       },),
                     SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Implement logic to save selected skills
-                        print('Selected Soft Skills: $selectedSkills');
-                      },
-                      child: Text('Save Skills'),
+                     Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Hard skills:',
+                        style: TextStyle(
+                          fontSize: 14,
+                         
+                          color: kGreyHeadTextcolor,
+                        ),
+                      ),
+                    ),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SkillsChips(availableSkills: hardSkillsGroup1),
+                          SkillsChips(availableSkills: hardSkillsGroup2),
+                          SkillsChips(availableSkills: hardSkillsGroup3),
+                          SkillsChips(availableSkills: hardSkillsGroup4),
+                          SkillsChips(availableSkills: hardSkillsGroup5),
+                          SkillsChips(availableSkills: hardSkillsGroup6),
+                          SkillsChips(availableSkills: hardSkillsGroup7),
+                          SkillsChips(availableSkills: hardSkillsGroup8),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Soft skills:',
+                        style: TextStyle(
+                          fontSize: 14,
+                         
+                          color: kGreyHeadTextcolor,
+                        ),
+                      ),
+                    ),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SkillsChips(availableSkills: softSkillsGroup1),
+                          SkillsChips(availableSkills: softSkillsGroup2),
+                          SkillsChips(availableSkills: softSkillsGroup3),
+                        ],
+                      ),
                     ),
                   ],
-                )
+                ),
+                TextButton(onPressed: (){
+                  final selectedSkills = context.read<SkillsProvider>().selectedSkills;
+                      print('Selected Skills: $selectedSkills');
+                }, child: Text("button"))
               ],
             ),
           ),
@@ -231,14 +273,15 @@ class _AddScreenState extends State<AddScreen> {
         height: 32,
         child: Container(
           decoration: BoxDecoration(
-              gradient: kPurpleGradient, borderRadius: BorderRadius.circular(12)),
+              gradient: kPurpleGradient,
+              borderRadius: BorderRadius.circular(12)),
           child: ElevatedButton(
             onPressed: () {
               // Call the function to save the note
               if (!loader) {
                 saveNote();
               }
-              
+
               FocusScope.of(context).unfocus();
             },
             style: ButtonStyle(
@@ -250,15 +293,14 @@ class _AddScreenState extends State<AddScreen> {
                 ),
               ),
             ),
-            child:
-            loader
-            ? CupertinoActivityIndicator(color: Colors.white,)
-
-            
-             :Text(
-              'Post',
-              style: TextStyle(color: Colors.white),
-            ),
+            child: loader
+                ? CupertinoActivityIndicator(
+                    color: Colors.white,
+                  )
+                : Text(
+                    'Post',
+                    style: TextStyle(color: Colors.white),
+                  ),
           ),
         ),
       ),

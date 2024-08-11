@@ -11,9 +11,10 @@ class Note {
   final List<dynamic> likes;
   final String userId;
   List<dynamic> comments;
+  List<dynamic> interested;
   final String image;
    final String? postImage;
-  final List<String>? skills;
+  final List<dynamic>? skills;
 
   Note({
     required this.title,
@@ -23,6 +24,7 @@ class Note {
     required this.likes,
     required this.userName,
     required this.comments,
+    required this.interested,
     required this.userId,
     required this.image,
     this.skills,
@@ -40,8 +42,10 @@ class Note {
       postImage: json['image'],
       noteId: json['_id'] ?? '',
       likes: json['likes'],
+      interested: json['interested'],
       createdAt: DateTime.parse(json['createdAt'] ?? ''),
       comments: json['comments'] ?? '',
+      skills: json['requiredSkills'] 
     );
   }
 

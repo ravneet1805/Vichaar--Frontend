@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:vichaar/Components/noteTile.dart';
 import 'package:vichaar/Components/shimmer.dart';
 import 'package:vichaar/Model/noteModel.dart';
 import '../Model/userModel.dart';
+import '../Provider/preFetchProvider.dart';
 import '../Services/apiServices.dart';
 import '../constant.dart';
 import 'profileScreen.dart'; // Import your constants for colors and styles
@@ -238,10 +240,9 @@ class _ExplorePageState extends State<ExplorePage> {
         SizedBox(height: 10),
         Text('Trending Vichaar', style: TextStyle(color: kGreyHeadTextcolor, fontSize: 18)),
         SizedBox(height: 10),
-        FutureBuilder<List<Note>>(
-          future: trendingNotes,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
+        Consumer<PreFetchProvider>(
+          builder: (context, noteProvider, child) {
+            if (noteProvider.isLoading) {
               return Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -252,16 +253,16 @@ class _ExplorePageState extends State<ExplorePage> {
                   ShimmerTile(),
                 ],
               );
-            } else if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}', style: TextStyle(color: Colors.red));
+            } else if (noteProvider.notesForYou.isEmpty) {
+              return Center(child: Text('No Posts Available'));
             } else {
               return ListView.builder(
                 shrinkWrap: true,
                 physics: NeverScrollableScrollPhysics(),
-                itemCount: snapshot.data!.length,
-                itemBuilder: (context, index) {
-                  Note note = snapshot.data![index];
-                  print(note.name);
+              itemCount: noteProvider.trendingNotes.length,
+              
+              itemBuilder: (context, index) {
+                var note = noteProvider.trendingNotes[index];
                   return NoteTile(
                     title: note.title,
                     name: note.name,
@@ -269,11 +270,13 @@ class _ExplorePageState extends State<ExplorePage> {
                     time: note.formatTime(),
                     noteId: note.noteId,
                     likes: note.likes,
+                    interested: note.interested,
                     userID: note.userId,
                     postImage: note.postImage ?? '',
                     comments: note.comments,
                     image: note.image,
                     index: index,
+                    skills: note.skills ?? [],
                   );
                 },
               );
@@ -316,10 +319,12 @@ class _ExplorePageState extends State<ExplorePage> {
                 time: note.formatTime(),
                 noteId: note.noteId,
                 likes: note.likes,
+                interested: note.interested,
                 userID: note.userId,
                 postImage: note.postImage ?? '',
                 comments: note.comments,
                 image: note.image,
+                skills: note.skills ?? [],
                 index: index,
               );
             },

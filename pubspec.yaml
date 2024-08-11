@@ -61,6 +61,8 @@ dependencies:
   image_cropper: ^1.5.1
   fluentui_system_icons: ^1.1.248
   path_provider: ^2.0.2
+  auto_size_text: ^3.0.0
+  web_socket_channel: ^2.0.0
 
 
 

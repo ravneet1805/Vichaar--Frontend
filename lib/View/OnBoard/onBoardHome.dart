@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -81,7 +82,7 @@ class _OnboardingHomeScreenState extends State<OnboardingHomeScreen> {
                       _buildPage(
                         title: 'Dreams take flight, Ideas ignite, Minds unite.',
                         description:
-                            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean bibendum mi in lorem aliquam, vitae posuere odio suscipit.',
+                            'Turn aspirations into reality with a community that inspires.',
                       ),
                       _buildPage(
                         title: 'Share your vision, Build your future.',
@@ -200,23 +201,29 @@ class _OnboardingHomeScreenState extends State<OnboardingHomeScreen> {
                               child: Container(
                                 width: mq.width * 0.5,
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     FaIcon(FontAwesomeIcons.linkedin, size: (mq.width*0.055 <= 18)
                                     ? mq.width*0.055
                                     : 18,
                                     color: Color(0xff0072B1)),
-                                    Text(
-                                      'Continue with LinkedIn',
-                                      style: TextStyle(color: kGreyHeadTextcolor,
-                                      fontSize: (mq.width*0.04 <= 16)
-                                      ?mq.width*0.04
-                                      :14
-
+                                    SizedBox(width: 5,),
+                                    Container(
+                                      width: mq.width * 0.4,
+                                      child: AutoSizeText(
                                       
-                                      )
-                                      ,
+                                        maxLines: 1,
+                                        'Continue with LinkedIn',
+                                        style: TextStyle(color: kGreyHeadTextcolor,
+                                        // fontSize: (mq.width*0.04 <= 16)
+                                        // ?mq.width*0.04
+                                        // :14
+                                      
+                                        
+                                        )
+                                        ,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -240,20 +247,27 @@ class _OnboardingHomeScreenState extends State<OnboardingHomeScreen> {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
+          AutoSizeText(
             title,
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 20,
               color: Colors.white,
               fontWeight: FontWeight.bold,
             ),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 16),
-          Text(
-            description,
-            style: TextStyle(fontSize: 14, color: Colors.white60),
-            textAlign: TextAlign.center,
+          Container(
+            width: 50,
+           
+            child: AutoSizeText(
+              description,
+               minFontSize: 8,
+              maxFontSize: 16,
+              style: TextStyle(color: Colors.white60),
+              
+              textAlign: TextAlign.center,
+            ),
           ),
         ],
       ),
